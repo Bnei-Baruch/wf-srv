@@ -9,8 +9,8 @@ var (
 	BackupCap = os.Getenv("BACKUP_CAP")
 	ArchCap   = os.Getenv("ARCH_CAP")
 
-	PORT = os.Getenv("LISTEN_ADDRESS")
-	ACC_URL = os.Getenv("ACC_URL")
+	PORT      = os.Getenv("LISTEN_ADDRESS")
+	ACC_URL   = os.Getenv("ACC_URL")
 	SKIP_AUTH = os.Getenv("SKIP_AUTH") == "true"
 
 	SdbUrl   = os.Getenv("SDB_URL")
@@ -26,13 +26,13 @@ var (
 	CapPath = os.Getenv("CAP_PATH")
 	LogPath = os.Getenv("LOG_PATH")
 
-	ExecTopic  = "workflow/exec/#"
-	WorkflowTopic = "workflow/service/#"
+	ExecTopic     = "workflow/exec/#"
+	WorkflowTopic = "workflow/server/#"
 )
 
 const (
-	ExtPrefix         = "kli/"
-	ServiceDataTopic  = "exec/service/data/"
-	WorkflowDataTopic = "workflow/service/data/"
-	MonitorUploadTopic = "workflow/service/upload/monitor"
+	ExtPrefix          = "kli/"
+	ServiceDataTopic   = "workflow/exec/data/"
+	WorkflowDataTopic  = "workflow/server/data/"
+	MonitorUploadTopic = "workflow/server/upload/monitor"
 )

@@ -12,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
 type MqttWorkflow struct {
@@ -205,11 +204,8 @@ func StopFlow(rp MqttWorkflow, c mqtt.Client) {
 	size := stat.Size()
 	log.Debug().Str("source", "CAP").Msgf("stopFlow file size: ", size)
 
-	time := stat.Sys().(*syscall.Stat_t)
-	//FIXME: WTF?
-	ctime := time.Ctimespec.Nsec //OSX
-	//ctime := time.Ctim.Nsec //Linux
-	log.Debug().Str("source", "CAP").Msgf("Creation time file: ", ctime)
+	mtime := stat.ModTime().Unix()
+	log.Debug().Str("source", "CAP").Msgf("Creation time file: ", mtime)
 
 	h := sha1.New()
 	if _, err = io.Copy(h, file); err != nil {
@@ -225,7 +221,7 @@ func StopFlow(rp MqttWorkflow, c mqtt.Client) {
 		User:          "operator@dev.com",
 		FileName:      StopName,
 		WorkflowID:    rp.ID,
-		CreatedAt:     ctime,
+		CreatedAt:     mtime,
 		Size:          size,
 		Sha:           sha,
 		Part:          "false",
