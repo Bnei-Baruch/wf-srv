@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 func getUploadPath(ep string) string {
@@ -169,4 +170,15 @@ func (a *App) statusJson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, s)
+}
+
+func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
+	cmdArguments := []string{}
+	cmd := exec.Command("/opt/wfexec/get_upload.sh", cmdArguments...)
+	cmd.Dir = "/opt/wfexec/"
+	message, _ := cmd.CombinedOutput()
+
+	go a.SendMessage(message)
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }

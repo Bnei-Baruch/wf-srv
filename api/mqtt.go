@@ -62,14 +62,13 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 	s := strings.Split(m.Topic(), "/")
 	p := string(m.Payload())
 
-
 	if s[0] == "kli" && len(s) == 5 {
 		id = s[4]
 	} else if s[0] == "exec" && len(s) == 4 {
 		id = s[3]
 	}
 
-	cmd := exec.Command("/opt/wfexec/" + id + ".sh", p)
+	cmd := exec.Command("/opt/wfexec/"+id+".sh", p)
 	cmd.Dir = "/opt/wfexec/"
 	_, err := cmd.CombinedOutput()
 
@@ -100,24 +99,19 @@ func (a *App) SendRespond(id string, m *MqttPayload) {
 	}
 }
 
-func (a *App) SendMessage(id string) {
-	var topic string
-	var m interface{}
+func (a *App) SendMessage(message []byte) {
+	var topic = common.MonitorUploadTopic
+	//var m interface{}
 	//date := time.Now().Format("2006-01-02")
 
-	if id == "ingest" {
-		topic = common.MonitorUploadTopic
-		//m, _ = models.FindIngest(a.DB, "date", date)
-	}
-
-	message, err := json.Marshal(m)
-	if err != nil {
-		log.Error().Str("monitor", "MQTT").Err(err).Msg("Message parsing")
-	}
+	//message, err := json.Marshal(m)
+	//if err != nil {
+	//	log.Error().Str("monitor", "MQTT").Err(err).Msg("Message parsing")
+	//}
 
 	text := fmt.Sprintf(string(message))
 	if token := a.Msg.Publish(topic, byte(0), true, text); token.Wait() && token.Error() != nil {
-		log.Error().Str("monitor", "MQTT").Err(err).Msg("Report Monitor")
+		log.Error().Str("monitor", "MQTT").Err(token.Error()).Msg("Report Monitor")
 	}
 }
 
