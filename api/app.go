@@ -56,12 +56,18 @@ func (a *App) Run(port string) {
 
 func (a *App) InitializeRoutes() {
 	a.Router.Use(LoggingMiddleware)
+	a.Router.HandleFunc("/convert", a.convertExec).Methods("GET")
 	a.Router.HandleFunc("/{ep}/upload", a.handleUpload).Methods("POST")
 	a.Router.HandleFunc("/workflow/{ep}", a.putJson).Methods("PUT")
 	a.Router.HandleFunc("/{ep}/status", a.statusJson).Methods("GET")
+	a.Router.HandleFunc("/convert/monitor", a.convertMonitor).Methods("GET")
 	a.Router.HandleFunc("/upload/monitor", a.uploadMonitor).Methods("GET")
-	a.Router.PathPrefix("/backup/").Handler(http.StripPrefix("/backup/", http.FileServer(http.Dir("/backup"))))
-	a.Router.PathPrefix("/mnt/").Handler(http.StripPrefix("/mnt/", http.FileServer(http.Dir("/mnt"))))
+	if common.EP == "wf-srv" {
+		a.Router.PathPrefix("/backup/").Handler(http.StripPrefix("/backup/", http.FileServer(http.Dir("/backup"))))
+		a.Router.PathPrefix("/mnt/").Handler(http.StripPrefix("/mnt/", http.FileServer(http.Dir("/mnt"))))
+	} else {
+		a.Router.PathPrefix("/ffconv/").Handler(http.StripPrefix("/ffconv/", http.FileServer(http.Dir("/ffconv"))))
+	}
 }
 
 func (a *App) initMQTT() {

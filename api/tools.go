@@ -40,6 +40,24 @@ func (s *Status) PutExec(endpoint string, p string) error {
 	return nil
 }
 
+func (s *Status) GetExec(id string, key string, value string) error {
+
+	cmdArguments := []string{id, key, value}
+	cmd := exec.Command("/opt/convert/exec.sh", cmdArguments...)
+	cmd.Dir = "/opt/convert"
+	out, err := cmd.CombinedOutput()
+
+	if err != nil {
+		s.Out = err.Error()
+		return err
+	}
+
+	s.Out = string(out)
+	json.Unmarshal(out, &s.Result)
+
+	return nil
+}
+
 func (s *Status) GetStatus(endpoint string, id string, key string, value string) error {
 
 	cmdArguments := []string{id, key, value}

@@ -178,7 +178,36 @@ func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/wfexec/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.SendMessage(message)
+	go a.SendMessage("upload", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (a *App) convertMonitor(w http.ResponseWriter, r *http.Request) {
+	cmdArguments := []string{}
+	cmd := exec.Command("/opt/convert/status.sh", cmdArguments...)
+	cmd.Dir = "/opt/convert/"
+	message, _ := cmd.CombinedOutput()
+
+	go a.SendMessage("convert", message)
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (a *App) convertExec(w http.ResponseWriter, r *http.Request) {
+	var s Status
+
+	id := r.FormValue("id")
+	key := r.FormValue("key")
+	value := r.FormValue("value")
+
+	err := s.GetExec(id, key, value)
+
+	if err != nil {
+		s.Status = "error"
+	} else {
+		s.Status = "ok"
+	}
+
+	respondWithJSON(w, http.StatusOK, s)
 }

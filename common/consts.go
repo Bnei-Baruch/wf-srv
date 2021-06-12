@@ -31,8 +31,9 @@ var (
 )
 
 const (
-	ExtPrefix          = "kli/"
-	ServiceDataTopic   = "workflow/exec/data/"
-	WorkflowDataTopic  = "workflow/server/data/"
-	MonitorUploadTopic = "workflow/server/upload/monitor"
+	ExtPrefix           = "kli/"
+	ServiceDataTopic    = "workflow/exec/data/"
+	WorkflowDataTopic   = "workflow/server/data/"
+	MonitorUploadTopic  = "workflow/server/upload/monitor"
+	MonitorConvertTopic = "workflow/server/convert/monitor"
 )

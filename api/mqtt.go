@@ -99,8 +99,8 @@ func (a *App) SendRespond(id string, m *MqttPayload) {
 	}
 }
 
-func (a *App) SendMessage(message []byte) {
-	var topic = common.MonitorUploadTopic
+func (a *App) SendMessage(source string, message []byte) {
+	var topic string
 	//var m interface{}
 	//date := time.Now().Format("2006-01-02")
 
@@ -108,6 +108,13 @@ func (a *App) SendMessage(message []byte) {
 	//if err != nil {
 	//	log.Error().Str("monitor", "MQTT").Err(err).Msg("Message parsing")
 	//}
+
+	switch source {
+	case "upload":
+		topic = common.MonitorUploadTopic
+	case "convert":
+		topic = common.MonitorConvertTopic
+	}
 
 	text := fmt.Sprintf(string(message))
 	if token := a.Msg.Publish(topic, byte(0), true, text); token.Wait() && token.Error() != nil {
