@@ -62,7 +62,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/{ep}/status", a.statusJson).Methods("GET")
 	a.Router.HandleFunc("/convert/monitor", a.convertMonitor).Methods("GET")
 	a.Router.HandleFunc("/upload/monitor", a.uploadMonitor).Methods("GET")
-	if common.EP == "wf-srv" {
+	if common.EP == "wf-srv" || common.EP == "wf-nas" {
 		a.Router.PathPrefix("/backup/").Handler(http.StripPrefix("/backup/", http.FileServer(http.Dir("/backup"))))
 		a.Router.PathPrefix("/mnt/").Handler(http.StripPrefix("/mnt/", http.FileServer(http.Dir("/mnt"))))
 	} else {
