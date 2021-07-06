@@ -20,15 +20,13 @@ type App struct {
 }
 
 func (a *App) InitClient() {
-	var oidcIDTokenVerifier *oidc.IDTokenVerifier
 	oidcProvider, err := oidc.NewProvider(context.TODO(), common.ACC_URL)
 	if err != nil {
 		log.Fatal().Str("source", "APP").Err(err).Msg("oidc.NewProvider")
 	}
-	oidcIDTokenVerifier = oidcProvider.Verifier(&oidc.Config{
+	a.tokenVerifier = oidcProvider.Verifier(&oidc.Config{
 		SkipClientIDCheck: true,
 	})
-	a.tokenVerifier = oidcIDTokenVerifier
 }
 
 func (a *App) Initialize() {
@@ -55,7 +53,7 @@ func (a *App) Run(port string) {
 }
 
 func (a *App) InitializeRoutes() {
-	a.Router.Use(LoggingMiddleware)
+	a.Router.Use(a.LoggingMiddleware)
 	a.Router.HandleFunc("/convert", a.convertExec).Methods("GET")
 	a.Router.HandleFunc("/{ep}/upload", a.handleUpload).Methods("POST")
 	a.Router.HandleFunc("/workflow/{ep}", a.putJson).Methods("PUT")

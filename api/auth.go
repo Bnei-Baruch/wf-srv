@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/coreos/go-oidc"
 	"net"
 	"net/http"
 	"strings"
@@ -38,10 +37,8 @@ type IDTokenClaims struct {
 	Typ               string           `json:"typ"`
 }
 
-func LoggingMiddleware(next http.Handler) http.Handler {
+func (a *App) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var tokenVerifier *oidc.IDTokenVerifier
 
 		if common.SKIP_AUTH {
 			next.ServeHTTP(w, r)
@@ -71,10 +68,16 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		} else {
 			auth := parseToken(r)
+
+			if auth == "" {
+				respondWithError(w, http.StatusBadRequest, "no `Authorization` header set")
+				return
+			}
+
 			if len(auth) > 0 {
 
 				// Authorization header provided, let's verify.
-				token, err := tokenVerifier.Verify(context.TODO(), auth)
+				token, err := a.tokenVerifier.Verify(context.TODO(), auth)
 				if err != nil {
 					respondWithError(w, http.StatusUnauthorized, err.Error())
 					return
