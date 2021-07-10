@@ -57,6 +57,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/convert", a.convertExec).Methods("GET")
 	a.Router.HandleFunc("/{ep}/upload", a.handleUpload).Methods("POST")
 	a.Router.HandleFunc("/workflow/{ep}", a.putJson).Methods("PUT")
+	a.Router.HandleFunc("/file/save", a.saveFile).Methods("PUT")
 	a.Router.HandleFunc("/{ep}/status", a.statusJson).Methods("GET")
 	a.Router.HandleFunc("/convert/monitor", a.convertMonitor).Methods("GET")
 	a.Router.HandleFunc("/upload/monitor", a.uploadMonitor).Methods("GET")

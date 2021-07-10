@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -131,6 +133,25 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 		os.Rename(tempfile.Name(), u.Url)
 		u.UploadProps(u.Url, endpoint)
 	}
+}
+
+func (a *App) saveFile(w http.ResponseWriter, r *http.Request) {
+	var f workflow.Files
+
+	d := json.NewDecoder(r.Body)
+	if err := d.Decode(&f); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		return
+	}
+
+	defer r.Body.Close()
+
+	if err := f.SaveFile(); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, f)
 }
 
 func (a *App) putJson(w http.ResponseWriter, r *http.Request) {

@@ -23,8 +23,10 @@ var (
 	USERNAME = os.Getenv("MQTT_USER")
 	PASSWORD = os.Getenv("MQTT_PASS")
 
-	CapPath = os.Getenv("CAP_PATH")
-	LogPath = os.Getenv("LOG_PATH")
+	CapPath    = os.Getenv("CAP_PATH")
+	LogPath    = os.Getenv("LOG_PATH")
+	UploadPath = os.Getenv("UPLOAD_PATH")
+	FilesPath  = os.Getenv("FILES_PATH")
 
 	ExecTopic     = "workflow/exec/#"
 	WorkflowTopic = "workflow/server/#"
