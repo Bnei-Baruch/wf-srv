@@ -49,6 +49,7 @@ func (f *Files) SaveFile() error {
 
 	f.FileID = FileId
 	f.Date = DateNow
+	f.Extension = FileExt
 	f.Props["removed"] = false
 	f.Props["timestamp"] = TimeStamp
 	f.Props["url"] = FilePath
