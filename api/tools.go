@@ -1,20 +1,25 @@
 package api
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"gopkg.in/vansante/go-ffprobe.v2"
 	"io"
 	"os"
 	"os/exec"
+	"time"
 )
 
 type Upload struct {
-	Filename string `json:"file_name"`
-	Sha1     string `json:"sha1"`
-	Size     int64  `json:"size"`
-	Mimetype string `json:"type"`
-	Url      string `json:"url"`
+	Duration  float64     `json:"duration,omitempty"`
+	Filename  string      `json:"file_name"`
+	Sha1      string      `json:"sha1"`
+	Size      int64       `json:"size"`
+	Mimetype  string      `json:"type"`
+	Url       string      `json:"url"`
+	MediaInfo interface{} `json:"media_info,omitempty"`
 }
 
 type Status struct {
@@ -113,6 +118,15 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 			return err
 		}
 		u.Url = newpath
+
+		ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFn()
+
+		data, err := ffprobe.ProbeURL(ctx, newpath)
+		if err == nil {
+			u.Duration = data.Format.DurationSeconds
+			u.MediaInfo = data
+		}
 	}
 
 	return nil

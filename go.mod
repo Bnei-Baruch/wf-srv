@@ -13,4 +13,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/vansante/go-ffprobe.v2 v2.0.2 // indirect
 )

@@ -42,8 +42,6 @@ func getUploadPath(ep string) string {
 	default:
 		return "/backup/tmp/upload/"
 	}
-
-	return "/backup/tmp/upload/"
 }
 
 func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
