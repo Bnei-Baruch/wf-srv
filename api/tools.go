@@ -13,13 +13,12 @@ import (
 )
 
 type Upload struct {
-	Duration  float64     `json:"duration,omitempty"`
 	Filename  string      `json:"file_name"`
 	Sha1      string      `json:"sha1"`
 	Size      int64       `json:"size"`
 	Mimetype  string      `json:"type"`
 	Url       string      `json:"url"`
-	MediaInfo interface{} `json:"media_info,omitempty"`
+	MediaInfo interface{} `json:"media_info"`
 }
 
 type Status struct {
@@ -124,7 +123,6 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 
 		data, err := ffprobe.ProbeURL(ctx, newpath)
 		if err == nil {
-			u.Duration = data.Format.DurationSeconds
 			u.MediaInfo = data
 		}
 	}

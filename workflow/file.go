@@ -22,6 +22,7 @@ type Files struct {
 	MimeType  string                 `json:"mime_type"`
 	UID       string                 `json:"uid"`
 	WID       string                 `json:"wid"`
+	MediaInfo interface{}            `json:"media_info"`
 	Props     map[string]interface{} `json:"properties"`
 	ProductID string                 `json:"product_id"`
 }
