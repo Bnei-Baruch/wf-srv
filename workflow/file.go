@@ -1,8 +1,10 @@
 package workflow
 
 import (
+	"errors"
 	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/rs/zerolog/log"
+	"mime"
 	"os"
 	"strconv"
 	"strings"
@@ -34,12 +36,26 @@ func (f *Files) SaveFile() error {
 	Year := strings.Split(DateNow, "-")[0] + "/"
 	Month := strings.Split(DateNow, "-")[1] + "/"
 	FileId := "f" + strconv.FormatInt(TimeStamp, 10)
-	UploadName := f.Props["upload_name"].(string)
 	FileName := f.FileName
-	// FIXME: We need to put extension here based on mime-type
-	FileExt := strings.Split(UploadName, ".")[1]
 	SavePath := common.FilesPath + Year + Month
 
+	// Take extension by mime type
+	var FileExt string
+	if f.MimeType == "application/octet-stream" {
+		FileExt = "srt"
+	} else {
+		e, err := mime.ExtensionsByType(f.MimeType)
+		if err != nil {
+			return err
+		}
+		if len(e) == 0 {
+			err = errors.New("SaveFile: file type not recognized")
+			return err
+		}
+		FileExt = strings.Trim(e[0], ".")
+	}
+
+	// Make directory
 	if _, err := os.Stat(SavePath); os.IsNotExist(err) {
 		err = os.Mkdir(SavePath, os.ModeDir|0755)
 		log.Error().Str("source", "FILES").Err(err).Msg("SaveFile: failed to make directory")
