@@ -52,7 +52,7 @@ func (f *Files) SaveFile() error {
 			err = errors.New("SaveFile: file type not recognized")
 			return err
 		}
-		FileExt = strings.Trim(e[0], ".")
+		FileExt = strings.Trim(e[len(e)-1], ".")
 	}
 
 	// Make directory
