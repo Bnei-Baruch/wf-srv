@@ -1,10 +1,8 @@
 package workflow
 
 import (
-	"errors"
 	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/rs/zerolog/log"
-	"mime"
 	"os"
 	"strconv"
 	"strings"
@@ -39,22 +37,6 @@ func (f *Files) SaveFile() error {
 	FileName := f.FileName
 	SavePath := common.FilesPath + Year + Month
 
-	// Take extension by mime type
-	var FileExt string
-	if f.MimeType == "application/octet-stream" {
-		FileExt = "srt"
-	} else {
-		e, err := mime.ExtensionsByType(f.MimeType)
-		if err != nil {
-			return err
-		}
-		if len(e) == 0 {
-			err = errors.New("SaveFile: file type not recognized")
-			return err
-		}
-		FileExt = strings.Trim(e[len(e)-1], ".")
-	}
-
 	// Make directory
 	if _, err := os.Stat(SavePath); os.IsNotExist(err) {
 		err = os.Mkdir(SavePath, os.ModeDir|0755)
@@ -62,11 +44,10 @@ func (f *Files) SaveFile() error {
 		return err
 	}
 
-	FilePath := SavePath + FileName + "_" + FileId + "." + FileExt
+	FilePath := SavePath + FileName + "_" + FileId + "." + f.Extension
 
 	f.FileID = FileId
 	f.Date = DateNow
-	f.Extension = FileExt
 	f.Props["removed"] = false
 	f.Props["timestamp"] = TimeStamp
 	f.Props["url"] = FilePath

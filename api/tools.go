@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/gabriel-vasile/mimetype"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"io"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 type Upload struct {
 	Filename  string      `json:"file_name"`
+	Extension string      `json:"extension,omitempty"`
 	Sha1      string      `json:"sha1"`
 	Size      int64       `json:"size"`
 	Mimetype  string      `json:"type"`
@@ -117,6 +119,19 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 			return err
 		}
 		u.Url = newpath
+
+		mt, err := mimetype.DetectFile(newpath)
+		if err != nil {
+			return err
+		}
+
+		u.Mimetype = mt.String()
+
+		if u.Mimetype == "application/octet-stream" {
+			u.Extension = "srt"
+		} else {
+			u.Extension = mt.Extension()
+		}
 
 		ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelFn()
