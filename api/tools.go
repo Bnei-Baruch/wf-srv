@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -130,7 +131,7 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 		if u.Mimetype == "application/octet-stream" {
 			u.Extension = "srt"
 		} else {
-			u.Extension = mt.Extension()
+			u.Extension = strings.Trim(mt.Extension(), ".")
 		}
 
 		ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
