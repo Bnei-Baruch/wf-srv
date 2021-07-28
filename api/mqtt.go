@@ -68,7 +68,7 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 		id = s[3]
 	}
 
-	cmd := exec.Command("/opt/wfexec/"+id+".sh", p)
+	cmd := exec.Command("/opt/wfexec/"+id+".sh", p, common.EP)
 	cmd.Dir = "/opt/wfexec/"
 	_, err := cmd.CombinedOutput()
 
