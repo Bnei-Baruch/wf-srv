@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	wf "github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,31 +24,32 @@ type MqttPayload struct {
 
 func (a *App) SubMQTT(c mqtt.Client) {
 	log.Info().Str("source", "MQTT").Msg("- Connected -")
+
 	//FIXME: OLd exec flow - will be deprecated
-	if token := a.Msg.Subscribe(common.ExecTopic, byte(2), a.execMessage); token.Wait() && token.Error() != nil {
+	if token := a.Msg.Subscribe(common.WorkflowExec, byte(2), a.execMessage); token.Wait() && token.Error() != nil {
 		log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
 	} else {
-		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.ExecTopic)
+		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.WorkflowExec)
 	}
 
-	if token := a.Msg.Subscribe(common.ExtPrefix+common.ExecTopic, byte(2), a.execMessage); token.Wait() && token.Error() != nil {
+	if token := a.Msg.Subscribe(common.ExtPrefix+common.WorkflowExec, byte(2), a.execMessage); token.Wait() && token.Error() != nil {
 		log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
 	} else {
-		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.ExtPrefix + common.ExecTopic)
+		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.ExtPrefix + common.WorkflowExec)
 	}
 
 	//TODO: Will come to chenge old exec flow
-	if token := a.Msg.Subscribe(common.WorkflowTopic, byte(2), wf.MqttMessage); token.Wait() && token.Error() != nil {
-		log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
-	} else {
-		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.WorkflowTopic)
-	}
-
-	if token := a.Msg.Subscribe(common.ExtPrefix+common.WorkflowTopic, byte(2), wf.MqttMessage); token.Wait() && token.Error() != nil {
-		log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
-	} else {
-		log.Info().Str("source", "MQTT").Msg("Subscription - " + common.ExtPrefix + common.WorkflowTopic)
-	}
+	//if token := a.Msg.Subscribe(common.WorkflowTopic, byte(2), wf.MqttMessage); token.Wait() && token.Error() != nil {
+	//	log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
+	//} else {
+	//	log.Info().Str("source", "MQTT").Msg("Subscription - " + common.WorkflowTopic)
+	//}
+	//
+	//if token := a.Msg.Subscribe(common.ExtPrefix+common.WorkflowTopic, byte(2), wf.MqttMessage); token.Wait() && token.Error() != nil {
+	//	log.Fatal().Str("source", "MQTT").Err(token.Error()).Msg("Subscription error")
+	//} else {
+	//	log.Info().Str("source", "MQTT").Msg("Subscription - " + common.ExtPrefix + common.WorkflowTopic)
+	//}
 }
 
 func (a *App) LostMQTT(c mqtt.Client, err error) {
@@ -114,6 +114,8 @@ func (a *App) SendMessage(source string, message []byte) {
 		topic = common.MonitorUploadTopic
 	case "convert":
 		topic = common.MonitorConvertTopic
+	case "storage":
+		topic = "exec/workflow/storage/sync"
 	}
 
 	text := fmt.Sprintf(string(message))

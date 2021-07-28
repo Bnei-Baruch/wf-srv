@@ -30,6 +30,7 @@ var (
 
 	ExecTopic     = "workflow/exec/#"
 	WorkflowTopic = "workflow/server/#"
+	WorkflowExec  = "exec/workflow/#"
 )
 
 const (

@@ -149,6 +149,9 @@ func (a *App) saveFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	message, _ := json.Marshal(f)
+	go a.SendMessage("storage", message)
+
 	respondWithJSON(w, http.StatusOK, f)
 }
 
