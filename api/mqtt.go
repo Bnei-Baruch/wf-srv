@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
+	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"net/smtp"
 	"os/exec"
 	"strings"
 )
@@ -72,12 +74,50 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 	cmd.Dir = "/opt/wfexec/"
 	_, err := cmd.CombinedOutput()
 
+	if common.EP == "wf-nas" && id == "sync" {
+		sendEmail(m.Payload())
+	}
+
 	if err != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("Lost Connection")
 	}
 
 	//s.Out = string(out)
 	//json.Unmarshal(out, &s.Result)
+}
+
+func sendEmail(m []byte) {
+	file := workflow.Files{}
+	err := json.Unmarshal(m, &file)
+	if err != nil {
+		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
+		return
+	}
+	o := strings.Split(file.FileName, "_")[1]
+	if o == "o" {
+		l := strings.Split(file.FileName, "_")[0]
+		var to []string
+		if l == "heb" {
+			to = []string{"amnonbb@gmail.com", "oren.yair@gmail.com", "dani3l.rav@gmail.com"}
+		} else if l == "rus" {
+			to = []string{"amnonbb@gmail.com", "dmitrysamsonnikov@gmail.com"}
+		} else {
+			to = []string{"amnonbb@gmail.com"}
+		}
+		user := common.MAIL_USER
+		password := common.MAIL_PASS
+		smtpHost := common.MAIL_HOST
+		from := common.MAIL_FROM
+		smtpPort := "587"
+
+		msg := []byte("From: " + from + "\r\n" +
+			"Subject: " + file.FileName + "\r\n" +
+			"\r\n" +
+			"Product ID: " + file.ProductID + "\r\n")
+		auth := smtp.PlainAuth("", user, password, smtpHost)
+		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+		log.Error().Str("source", "MAIL").Err(err).Msg("SendMail error")
+	}
 }
 
 func (a *App) SendRespond(id string, m *MqttPayload) {
