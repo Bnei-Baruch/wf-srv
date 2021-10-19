@@ -74,7 +74,7 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 	cmd.Dir = "/opt/wfexec/"
 	_, err := cmd.CombinedOutput()
 
-	if common.EP == "wf-nas" && id == "sync" {
+	if id == "sync" || id == "storage" {
 		sendEmail(m.Payload())
 	}
 
@@ -87,22 +87,35 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 }
 
 func sendEmail(m []byte) {
+	log.Debug().Str("source", "MAIL").Msgf("Sending mail..\n")
 	file := workflow.Files{}
 	err := json.Unmarshal(m, &file)
 	if err != nil {
 		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
 		return
 	}
+
+	err, exist := IsExist(file.FileName)
+	if err != nil {
+		log.Error().Str("source", "MAIL").Err(err).Msg("Fail to check file name")
+		return
+	}
+	if exist == true {
+		return
+	}
+
+	log.Debug().Str("source", "MAIL").Msgf("File Name: %s \n", file.FileName)
+
 	o := strings.Split(file.FileName, "_")[1]
 	if o == "o" {
 		l := strings.Split(file.FileName, "_")[0]
 		var to []string
 		if l == "heb" {
-			to = []string{"amnonbb@gmail.com", "oren.yair@gmail.com", "dani3l.rav@gmail.com"}
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "oren.yair@gmail.com", "dani3l.rav@gmail.com"}
 		} else if l == "rus" {
-			to = []string{"amnonbb@gmail.com", "dmitrysamsonnikov@gmail.com"}
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "dmitrysamsonnikov@gmail.com"}
 		} else {
-			to = []string{"amnonbb@gmail.com"}
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com"}
 		}
 		user := common.MAIL_USER
 		password := common.MAIL_PASS
@@ -115,8 +128,12 @@ func sendEmail(m []byte) {
 			"\r\n" +
 			"Product ID: " + file.ProductID + "\r\n")
 		auth := smtp.PlainAuth("", user, password, smtpHost)
-		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
-		log.Error().Str("source", "MAIL").Err(err).Msg("SendMail error")
+		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+		if err != nil {
+			log.Error().Str("source", "MAIL").Err(err).Msg("SendMail error")
+		} else {
+			log.Debug().Str("source", "MAIL").Msg("Mail sent.\n")
+		}
 	}
 }
 

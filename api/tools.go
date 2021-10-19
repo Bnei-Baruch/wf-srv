@@ -5,9 +5,13 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/Bnei-Baruch/wf-srv/common"
+	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/gabriel-vasile/mimetype"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -144,4 +148,37 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 	}
 
 	return nil
+}
+
+func IsExist(name string) (error, bool) {
+	files := make([]workflow.Files, 0)
+	exist := false
+
+	req, err := http.NewRequest("GET", common.WfdbUrl+"?name=/"+name, nil)
+	if err != nil {
+		return err, exist
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err, exist
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err, exist
+	}
+
+	err = json.Unmarshal(body, &files)
+	if err != nil {
+		return err, exist
+	}
+
+	if len(files) > 0 {
+		exist = true
+	}
+
+	return nil, exist
 }
