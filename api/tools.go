@@ -154,11 +154,13 @@ func IsExist(name string) (error, bool) {
 	files := make([]workflow.Files, 0)
 	exist := false
 
+	var bearer = "Bearer " + common.PASSWORD
 	req, err := http.NewRequest("GET", common.WfdbUrl+"?name=/"+name, nil)
 	if err != nil {
 		return err, exist
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/json")
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
