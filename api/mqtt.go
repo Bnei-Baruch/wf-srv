@@ -24,10 +24,6 @@ type MqttPayload struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-type Wrapper struct {
-	Data string
-}
-
 func (a *App) SubMQTT(c mqtt.Client) {
 	log.Info().Str("source", "MQTT").Msg("- Connected -")
 
@@ -92,17 +88,11 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 
 func sendEmail(m []byte) {
 	log.Debug().Str("source", "MAIL").Msgf("Sending mail..\n")
-	file := workflow.Files{}
+	var file workflow.Files
 	err := json.Unmarshal(m, &file)
 	if err != nil {
-		var wrapper Wrapper
-		var val []byte = []byte("{\"data\":" + string(m) + "}")
-		err = json.Unmarshal([]byte(val), &wrapper)
-		err = json.Unmarshal([]byte(wrapper.Data), &file)
-		if err != nil {
-			log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
-			return
-		}
+		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
+		return
 	}
 
 	err, exist := IsExist(file.FileName)
@@ -160,8 +150,7 @@ func (a *App) SendRespond(id string, m *MqttPayload) {
 		log.Error().Str("source", "MQTT").Err(err).Msg("Message parsing")
 	}
 
-	text := fmt.Sprintf(string(message))
-	if token := a.Msg.Publish(topic, byte(2), false, text); token.Wait() && token.Error() != nil {
+	if token := a.Msg.Publish(topic, byte(2), false, message); token.Wait() && token.Error() != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("Send Respond")
 	}
 }
@@ -185,8 +174,7 @@ func (a *App) SendMessage(source string, message []byte) {
 		topic = "exec/workflow/storage/sync"
 	}
 
-	text := fmt.Sprintf(string(message))
-	if token := a.Msg.Publish(topic, byte(0), true, text); token.Wait() && token.Error() != nil {
+	if token := a.Msg.Publish(topic, byte(0), true, message); token.Wait() && token.Error() != nil {
 		log.Error().Str("monitor", "MQTT").Err(token.Error()).Msg("Report Monitor")
 	}
 }

@@ -62,8 +62,8 @@ func InitLog() {
 	}
 	mw := io.MultiWriter(writers...)
 
-	//zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	//zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.MessageFieldName = "msg"
 	log.Logger = zerolog.New(mw).With().Timestamp().Logger()
 
