@@ -70,16 +70,18 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 		id = s[3]
 	}
 
-	cmd := exec.Command("/opt/wfexec/"+id+".sh", p, common.EP)
-	cmd.Dir = "/opt/wfexec/"
-	_, err := cmd.CombinedOutput()
+	if id != "false" {
+		cmd := exec.Command("/opt/wfexec/"+id+".sh", p, common.EP)
+		cmd.Dir = "/opt/wfexec/"
+		_, err := cmd.CombinedOutput()
 
-	if id == "sync" || id == "storage" || common.EP == "wf-nas" {
-		sendEmail(m.Payload())
-	}
+		if id == "sync" || id == "storage" || common.EP == "wf-nas" {
+			sendEmail(m.Payload())
+		}
 
-	if err != nil {
-		log.Error().Str("source", "MQTT").Err(err).Msg("Lost Connection")
+		if err != nil {
+			log.Error().Str("source", "MQTT").Err(err).Msg("Lost Connection")
+		}
 	}
 
 	//s.Out = string(out)
@@ -94,6 +96,8 @@ func sendEmail(m []byte) {
 	uq := strings.ReplaceAll(string(m), "\n", "")
 	uq = strings.ReplaceAll(uq, "\\", "")
 	m = []byte(uq)
+
+	log.Debug().Str("source", "MAIL").Msgf("Unquote: %s \n", m)
 
 	err := json.Unmarshal(m, &file)
 	if err != nil {
