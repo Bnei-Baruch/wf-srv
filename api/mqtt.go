@@ -89,6 +89,12 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 func sendEmail(m []byte) {
 	log.Debug().Str("source", "MAIL").Msgf("Sending mail..\n")
 	var file workflow.Files
+
+	// Unquote
+	uq := strings.ReplaceAll(string(m), "\n", "")
+	uq = strings.ReplaceAll(uq, "\\", "")
+	m = []byte(uq)
+
 	err := json.Unmarshal(m, &file)
 	if err != nil {
 		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
