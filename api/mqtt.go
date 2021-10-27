@@ -24,6 +24,10 @@ type MqttPayload struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+type Wrapper struct {
+	Data string
+}
+
 func (a *App) SubMQTT(c mqtt.Client) {
 	log.Info().Str("source", "MQTT").Msg("- Connected -")
 
@@ -91,8 +95,14 @@ func sendEmail(m []byte) {
 	file := workflow.Files{}
 	err := json.Unmarshal(m, &file)
 	if err != nil {
-		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
-		return
+		var wrapper Wrapper
+		var val []byte = []byte("{\"data\":" + string(m) + "}")
+		err = json.Unmarshal([]byte(val), &wrapper)
+		err = json.Unmarshal([]byte(wrapper.Data), &file)
+		if err != nil {
+			log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
+			return
+		}
 	}
 
 	err, exist := IsExist(file.FileName)
