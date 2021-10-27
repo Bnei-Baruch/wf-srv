@@ -37,10 +37,10 @@ var (
 	ExecTopic     = "workflow/exec/#"
 	WorkflowTopic = "workflow/server/#"
 	WorkflowExec  = "exec/workflow/#"
+	ExtPrefix     = os.Getenv("MQTT_FWD_PREFIX")
 )
 
 const (
-	ExtPrefix           = "kli/"
 	ServiceDataTopic    = "workflow/exec/data/"
 	WorkflowDataTopic   = "workflow/server/data/"
 	MonitorUploadTopic  = "workflow/server/upload/monitor"

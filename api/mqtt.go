@@ -64,7 +64,7 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 	s := strings.Split(m.Topic(), "/")
 	p := string(m.Payload())
 
-	if s[0] == "kli" && len(s) == 5 {
+	if s[0] == common.ExtPrefix && len(s) == 5 {
 		id = s[4]
 	} else if s[0] == "exec" && len(s) == 4 {
 		id = s[3]
