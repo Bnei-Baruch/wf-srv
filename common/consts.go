@@ -23,7 +23,7 @@ var (
 	USERNAME = os.Getenv("MQTT_USER")
 	PASSWORD = os.Getenv("MQTT_PASS")
 
-	MAIL_FROM = os.Getenv("MQTT_FROM")
+	MAIL_FROM = os.Getenv("MAIL_FROM")
 	MAIL_HOST = os.Getenv("MAIL_HOST")
 	MAIL_PORT = os.Getenv("MAIL_PORT")
 	MAIL_USER = os.Getenv("MAIL_USER")

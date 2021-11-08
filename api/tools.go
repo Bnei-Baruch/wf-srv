@@ -155,7 +155,7 @@ func IsExist(name string) (error, bool) {
 	exist := false
 
 	var bearer = "Bearer " + common.PASSWORD
-	req, err := http.NewRequest("GET", common.WfdbUrl+"?name=/"+name, nil)
+	req, err := http.NewRequest("GET", common.WfdbUrl+"?file_name=/"+name, nil)
 	if err != nil {
 		return err, exist
 	}
