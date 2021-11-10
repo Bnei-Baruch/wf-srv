@@ -75,7 +75,7 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 		cmd.Dir = "/opt/wfexec/"
 		_, err := cmd.CombinedOutput()
 
-		if id == "sync" || id == "storage" || common.EP == "wf-nas" {
+		if id == "sync" || id == "storage" || common.EP == "wf-srv" {
 			sendEmail(m.Payload())
 		}
 
