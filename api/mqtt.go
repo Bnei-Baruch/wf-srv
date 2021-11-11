@@ -97,7 +97,7 @@ func sendEmail(m []byte) {
 	uq = strings.ReplaceAll(uq, "\\", "")
 	m = []byte(uq)
 
-	log.Debug().Str("source", "MAIL").Msgf("Unquote: %s \n", m)
+	//log.Debug().Str("source", "MAIL").Msgf("Unquote: %s \n", m)
 
 	err := json.Unmarshal(m, &file)
 	if err != nil {
