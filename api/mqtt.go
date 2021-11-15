@@ -107,7 +107,7 @@ func notifyMessage(m []byte) {
 		return
 	}
 
-	log.Debug().Str("source", "MQTT").Msgf("Check File Name: %s \n", file.FileName)
+	log.Debug().Str("source", "MQTT").Msgf("Check File Name: %s , with ID: %s \n", file.FileName, file.ProductID)
 
 	err, exist := IsExist(file.FileName)
 	if err != nil {

@@ -194,6 +194,17 @@ func (a *App) statusJson(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, s)
 }
 
+func (a *App) sendMail(w http.ResponseWriter, r *http.Request) {
+	var s Status
+	subject := r.FormValue("subject")
+	body := r.FormValue("body")
+
+	SendEmail(subject, body)
+	s.Status = "ok"
+
+	respondWithJSON(w, http.StatusOK, s)
+}
+
 func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	cmdArguments := []string{}
 	cmd := exec.Command("/opt/wfexec/get_upload.sh", cmdArguments...)
