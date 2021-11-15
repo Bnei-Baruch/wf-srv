@@ -8,7 +8,6 @@ import (
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"net/smtp"
 	"os/exec"
 	"strings"
 )
@@ -59,7 +58,8 @@ func (a *App) LostMQTT(c mqtt.Client, err error) {
 }
 
 func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
-	log.Debug().Str("source", "MQTT").Msgf("Received message: %s from topic: %s\n", m.Payload(), m.Topic())
+	//log.Debug().Str("source", "MQTT").Msgf("Received message: %s from topic: %s\n", m.Payload(), m.Topic())
+	log.Debug().Str("source", "MQTT").Msgf("Received message from topic: %s\n", m.Topic())
 	id := "false"
 	s := strings.Split(m.Topic(), "/")
 	p := string(m.Payload())
@@ -70,13 +70,15 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 		id = s[3]
 	}
 
+	log.Debug().Str("source", "MQTT").Msgf("Topic parser: %s\n", id)
+
 	if id != "false" {
 		cmd := exec.Command("/opt/wfexec/"+id+".sh", p, common.EP)
 		cmd.Dir = "/opt/wfexec/"
 		_, err := cmd.CombinedOutput()
 
 		if id == "sync" || id == "storage" || common.EP == "wf-srv" {
-			sendEmail(m.Payload())
+			notifyMessage(m.Payload())
 		}
 
 		if err != nil {
@@ -88,8 +90,8 @@ func (a *App) execMessage(c mqtt.Client, m mqtt.Message) {
 	//json.Unmarshal(out, &s.Result)
 }
 
-func sendEmail(m []byte) {
-	log.Debug().Str("source", "MAIL").Msgf("Sending mail..\n")
+func notifyMessage(m []byte) {
+	log.Debug().Str("source", "MQTT").Msgf("prepare notify mail..\n")
 	var file workflow.Files
 
 	// Unquote
@@ -101,50 +103,22 @@ func sendEmail(m []byte) {
 
 	err := json.Unmarshal(m, &file)
 	if err != nil {
-		log.Error().Str("source", "MAIL").Err(err).Msg("Unmarshal error")
+		log.Error().Str("source", "MQTT").Err(err).Msg("Unmarshal error")
 		return
 	}
 
+	log.Debug().Str("source", "MQTT").Msgf("Check File Name: %s \n", file.FileName)
+
 	err, exist := IsExist(file.FileName)
 	if err != nil {
-		log.Error().Str("source", "MAIL").Err(err).Msg("Fail to check file name")
+		log.Error().Str("source", "MQTT").Err(err).Msg("Fail to check file name")
 		return
 	}
 	if exist == true {
 		return
 	}
 
-	log.Debug().Str("source", "MAIL").Msgf("File Name: %s \n", file.FileName)
-
-	o := strings.Split(file.FileName, "_")[1]
-	if o == "o" {
-		l := strings.Split(file.FileName, "_")[0]
-		var to []string
-		if l == "heb" {
-			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "oren.yair@gmail.com", "dani3l.rav@gmail.com"}
-		} else if l == "rus" {
-			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "dmitrysamsonnikov@gmail.com"}
-		} else {
-			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com"}
-		}
-		user := common.MAIL_USER
-		password := common.MAIL_PASS
-		smtpHost := common.MAIL_HOST
-		from := common.MAIL_FROM
-		smtpPort := "587"
-
-		msg := []byte("From: " + from + "\r\n" +
-			"Subject: " + file.FileName + "\r\n" +
-			"\r\n" +
-			"Product ID: " + file.ProductID + "\r\n")
-		auth := smtp.PlainAuth("", user, password, smtpHost)
-		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
-		if err != nil {
-			log.Error().Str("source", "MAIL").Err(err).Msg("SendMail error")
-		} else {
-			log.Debug().Str("source", "MAIL").Msg("Mail sent.\n")
-		}
-	}
+	SendEmail(file.FileName, file.ProductID)
 }
 
 func (a *App) SendRespond(id string, m *MqttPayload) {

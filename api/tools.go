@@ -8,10 +8,12 @@ import (
 	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/gabriel-vasile/mimetype"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/smtp"
 	"os"
 	"os/exec"
 	"strings"
@@ -152,35 +154,71 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 
 func IsExist(name string) (error, bool) {
 	files := make([]workflow.Files, 0)
-	exist := false
 
 	var bearer = "Bearer " + common.PASSWORD
 	req, err := http.NewRequest("GET", common.WfdbUrl+"?file_name="+name, nil)
 	if err != nil {
-		return err, exist
+		return err, true
 	}
 	req.Header.Set("Authorization", bearer)
 	req.Header.Add("Content-Type", "application/json")
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return err, exist
+		return err, true
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err, exist
+		return err, true
 	}
+
+	//log.Debug().Str("source", "REQ").Msgf("File Name: %s \n", string(body))
 
 	err = json.Unmarshal(body, &files)
 	if err != nil {
-		return err, exist
+		return err, true
 	}
+
+	log.Debug().Str("source", "REQ").Msgf("Respond length: %s \n", len(files))
 
 	if len(files) > 0 {
-		exist = true
+		log.Debug().Str("source", "REQ").Msgf("Already exist: %s \n", len(files) > 0)
+		return nil, true
 	}
 
-	return nil, exist
+	return nil, false
+}
+
+func SendEmail(subject string, body string) {
+	log.Debug().Str("source", "MAIL").Msgf("Sending mail..\n")
+
+	o := strings.Split(subject, "_")[1]
+	if o == "o" {
+		l := strings.Split(subject, "_")[0]
+		var to []string
+		if l == "heb" {
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "oren.yair@gmail.com", "dani3l.rav@gmail.com"}
+		} else if l == "rus" {
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com", "dmitrysamsonnikov@gmail.com"}
+		} else {
+			to = []string{"amnonbb@gmail.com", "alex.mizrachi@gmail.com"}
+		}
+
+		user := common.MAIL_USER
+		password := common.MAIL_PASS
+		smtpHost := common.MAIL_HOST
+		from := common.MAIL_FROM
+		smtpPort := "587"
+
+		msg := []byte("From: " + from + "\r\n" + "Subject: " + subject + "\r\n" + "\r\n" + "Product ID: " + body + "\r\n")
+		auth := smtp.PlainAuth("", user, password, smtpHost)
+		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+		if err != nil {
+			log.Error().Str("source", "MAIL").Err(err).Msg("SendMail error")
+		} else {
+			log.Debug().Str("source", "MAIL").Msg("Mail sent.\n")
+		}
+	}
 }
