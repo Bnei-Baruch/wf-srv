@@ -183,7 +183,7 @@ func IsExist(name string) (error, bool) {
 
 	log.Debug().Str("source", "REQ").Msgf("Respond length: %s \n", len(files))
 
-	if len(files) > 0 {
+	if len(files) > 1 {
 		log.Debug().Str("source", "REQ").Msgf("Already exist: %s \n", len(files) > 0)
 		return nil, true
 	}
