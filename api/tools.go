@@ -12,11 +12,13 @@ import (
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/smtp"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -38,47 +40,71 @@ type Status struct {
 }
 
 type File struct {
-	ModifiedTime time.Time `json:"ModifiedTime"`
-	IsLink       bool      `json:"IsLink"`
-	IsDir        bool      `json:"IsDir"`
-	LinksTo      string    `json:"LinksTo"`
-	Size         int64     `json:"Size"`
-	Name         string    `json:"Name"`
-	Path         string    `json:"Path"`
-	Children     []*File   `json:"Children"`
+	ModTime  string  `json:"mod-time"`
+	IsDir    bool    `json:"is-dir"`
+	Size     int64   `json:"size"`
+	HSize    string  `json:"h-size"`
+	Name     string  `json:"name"`
+	Path     string  `json:"path"`
+	Children []*File `json:"children"`
 }
 
 func JsonFilesTree(path string) interface{} {
 	rootOSFile, _ := os.Stat(path)
-	rootFile := toFile(rootOSFile, path) //start with root file
+	rootFile := toFile(rootOSFile, path)
 	stack := []*File{rootFile}
 
-	for len(stack) > 0 { //until stack is empty,
-		file := stack[len(stack)-1] //pop entry from stack
+	for len(stack) > 0 {
+		file := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
-		children, _ := ioutil.ReadDir(file.Path) //get the children of entry
-		for _, chld := range children {          //for each child
-			child := toFile(chld, filepath.Join(file.Path, chld.Name())) //turn it into a File object
-			file.Children = append(file.Children, child)                 //append it to the children of the current file popped
-			stack = append(stack, child)                                 //append the child to the stack, so the same process can be run again
+		children, _ := ioutil.ReadDir(file.Path)
+		for _, ch := range children {
+			child := toFile(ch, filepath.Join(file.Path, ch.Name()))
+			file.Children = append(file.Children, child)
+			stack = append(stack, child)
 		}
 	}
 
 	return rootFile
 }
 
-func toFile(file os.FileInfo, path string) *File {
-	JSONFile := File{ModifiedTime: file.ModTime(),
-		IsDir:    file.IsDir(),
-		Size:     file.Size(),
-		Name:     file.Name(),
-		Path:     path,
-		Children: []*File{},
+func Round(val float64, roundOn float64, places int) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(places))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= roundOn {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
 	}
-	if file.Mode()&os.ModeSymlink == os.ModeSymlink {
-		JSONFile.IsLink = true
-		JSONFile.LinksTo, _ = filepath.EvalSymlinks(filepath.Join(path, file.Name()))
-	} // Else case is the zero values of the fields
+	newVal = round / pow
+	return
+}
+
+func HumanFileSize(size float64) string {
+	var suffixes [5]string
+	suffixes[0] = "B"
+	suffixes[1] = "KB"
+	suffixes[2] = "MB"
+	suffixes[3] = "GB"
+	suffixes[4] = "TB"
+
+	base := math.Log(size) / math.Log(1024)
+	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
+	getSuffix := suffixes[int(math.Floor(base))]
+	return strconv.FormatFloat(getSize, 'f', -1, 64) + " " + string(getSuffix)
+}
+
+func toFile(file os.FileInfo, path string) *File {
+	JSONFile := File{
+		ModTime: file.ModTime().Format("2006-01-02 15:04:05"),
+		IsDir:   file.IsDir(),
+		Size:    file.Size(),
+		HSize:   HumanFileSize(float64(file.Size())),
+		Name:    file.Name(),
+		Path:    path,
+	}
 	return &JSONFile
 }
 
