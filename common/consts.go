@@ -33,6 +33,7 @@ var (
 	LogPath    = os.Getenv("LOG_PATH")
 	UploadPath = os.Getenv("UPLOAD_PATH")
 	FilesPath  = os.Getenv("FILES_PATH")
+	TreePath   = os.Getenv("TREE_PATH")
 
 	ExecTopic     = "workflow/exec/#"
 	WorkflowTopic = "workflow/server/#"

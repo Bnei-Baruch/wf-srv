@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/gorilla/mux"
 	"io"
@@ -105,6 +106,7 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer tempfile.Close()
+		//defer os.Remove(tempfile.Name())
 
 		// continue reading until the whole file is upload or an error is reached
 		for !uploaded {
@@ -192,6 +194,13 @@ func (a *App) statusJson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, s)
+}
+
+func (a *App) getFilesTree(w http.ResponseWriter, r *http.Request) {
+
+	tf := JsonFilesTree(common.TreePath)
+
+	respondWithJSON(w, http.StatusOK, tf)
 }
 
 func (a *App) sendMail(w http.ResponseWriter, r *http.Request) {
