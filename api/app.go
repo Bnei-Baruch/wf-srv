@@ -48,7 +48,9 @@ func (a *App) Run(port string) {
 
 	log.Info().Str("source", "APP").Msgf("app run %s", port)
 
-	go http.ListenAndServeTLS(":8488", "fullchain.cer", "kab.sh.key", handlers.CORS(originsOk, headersOk, methodsOk)(a.Router))
+	if common.EP == "wf-nas" {
+		go http.ListenAndServeTLS(":8488", "fullchain.cer", "kab.sh.key", handlers.CORS(originsOk, headersOk, methodsOk)(a.Router))
+	}
 
 	if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(a.Router)); err != nil {
 		log.Fatal().Str("source", "APP").Err(err).Msg("http.ListenAndServe")

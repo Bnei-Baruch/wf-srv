@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -40,10 +41,10 @@ type Status struct {
 }
 
 type File struct {
-	ModTime  string  `json:"mod-time"`
-	IsDir    bool    `json:"is-dir"`
-	Size     int64   `json:"size"`
-	HSize    string  `json:"h-size"`
+	ModTime string `json:"mod-time"`
+	IsDir   bool   `json:"is-dir"`
+	Size    int64  `json:"size"`
+	//HSize    string  `json:"h-size"`
 	Name     string  `json:"name"`
 	Path     string  `json:"path"`
 	Children []*File `json:"children"`
@@ -63,6 +64,9 @@ func JsonFilesTree(path string) interface{} {
 			file.Children = append(file.Children, child)
 			stack = append(stack, child)
 		}
+		sort.Slice(file.Children[:], func(i, j int) bool {
+			return file.Children[i].IsDir
+		})
 	}
 
 	return rootFile
@@ -93,7 +97,7 @@ func HumanFileSize(size float64) string {
 	base := math.Log(size) / math.Log(1024)
 	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
 	getSuffix := suffixes[int(math.Floor(base))]
-	return strconv.FormatFloat(getSize, 'f', -1, 64) + " " + string(getSuffix)
+	return strconv.FormatFloat(getSize, 'f', -1, 64) + " " + getSuffix
 }
 
 func toFile(file os.FileInfo, path string) *File {
@@ -101,9 +105,9 @@ func toFile(file os.FileInfo, path string) *File {
 		ModTime: file.ModTime().Format("2006-01-02 15:04:05"),
 		IsDir:   file.IsDir(),
 		Size:    file.Size(),
-		HSize:   HumanFileSize(float64(file.Size())),
-		Name:    file.Name(),
-		Path:    path,
+		//HSize:   HumanFileSize(float64(file.Size())),
+		Name: file.Name(),
+		Path: path,
 	}
 	return &JSONFile
 }
