@@ -41,8 +41,8 @@ type Status struct {
 }
 
 type File struct {
-	ModTime string `json:"mod-time"`
-	IsDir   bool   `json:"is-dir"`
+	ModTime string `json:"mod_time"`
+	IsDir   bool   `json:"is_dir"`
 	Size    int64  `json:"size"`
 	//HSize    string  `json:"h-size"`
 	Name     string  `json:"name"`
