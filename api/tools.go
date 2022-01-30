@@ -67,6 +67,10 @@ func JsonFilesTree(path string) interface{} {
 		sort.Slice(file.Children[:], func(i, j int) bool {
 			return file.Children[i].IsDir
 		})
+
+		sort.Slice(file.Children[:], func(i, j int) bool {
+			return file.Children[i].Name < file.Children[i].Name
+		})
 	}
 
 	return rootFile
