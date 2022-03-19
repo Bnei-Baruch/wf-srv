@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.golang v0.10.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.3.1 // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
