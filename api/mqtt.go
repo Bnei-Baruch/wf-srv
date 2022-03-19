@@ -69,7 +69,7 @@ func (a *App) ConMQTT() error {
 	if err != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("client.Subscribe")
 	}
-	if sa.Reasons[0] != byte(2) {
+	if sa.Reasons[0] != byte(1) {
 		log.Error().Str("source", "MQTT").Err(err).Msgf("MQTT subscribe error: %d ", sa.Reasons[0])
 	}
 
