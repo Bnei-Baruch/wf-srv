@@ -1,4 +1,4 @@
-package workflow
+package wf
 
 import (
 	"encoding/json"
@@ -75,8 +75,11 @@ type Line struct {
 	CaptureDate    string   `json:"capture_date"`
 	CollectionType string   `json:"collection_type"`
 	CollectionUID  string   `json:"collection_uid,omitempty"`
+	CollectionID   int      `json:"collection_id,omitempty"`
 	ContentType    string   `json:"content_type"`
+	Episode        string   `json:"episode,omitempty"`
 	FinalName      string   `json:"final_name"`
+	FilmDate       string   `json:"film_date,omitempty"`
 	HasTranslation bool     `json:"has_translation"`
 	Holiday        bool     `json:"holiday"`
 	Language       string   `json:"language"`
@@ -85,10 +88,18 @@ type Line struct {
 	ManualName     string   `json:"manual_name"`
 	Number         int      `json:"number"`
 	Part           int      `json:"part"`
+	PartType       int      `json:"part_type,omitempty"`
+	Major          *Major   `json:"major,omitempty"`
 	Pattern        string   `json:"pattern"`
 	RequireTest    bool     `json:"require_test"`
+	Likutim        []string `json:"likutims,omitempty"`
 	Sources        []string `json:"sources"`
 	Tags           []string `json:"tags"`
+}
+
+type Major struct {
+	Type string `json:"type" binding:"omitempty,eq=source|eq=tag|eq=likutim"`
+	Idx  int    `json:"idx" binding:"omitempty,gte=0"`
 }
 
 type CaptureFlow struct {
@@ -114,7 +125,7 @@ func GetState() *CaptureState {
 	return cs
 }
 
-func SetState(m *paho.Publish) {
+func (w *WorkFlow) SetState(m *paho.Publish) {
 	cs := &CaptureState{}
 	err := json.Unmarshal(m.Payload, &cs)
 	if err != nil {
@@ -151,6 +162,33 @@ func (m *MdbPayload) PostMDB(ep string) error {
 
 func (w *WfdbCapture) GetWFDB(id string) error {
 	req, err := http.NewRequest("GET", common.WfdbUrl+"/ingest/"+id, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Str("source", "CAP").RawJSON("json", body).Msg("get WFDB")
+	err = json.Unmarshal(body, &w)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (w *WfdbCapture) GetIngestState(id string) error {
+	req, err := http.NewRequest("GET", common.WfdbUrl+"/state/ingest/"+id, nil)
 	if err != nil {
 		return err
 	}

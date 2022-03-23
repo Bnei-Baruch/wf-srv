@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/Bnei-Baruch/wf-srv/workflow"
+	"github.com/Bnei-Baruch/wf-srv/wf"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -136,7 +136,7 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) saveFile(w http.ResponseWriter, r *http.Request) {
-	var f workflow.Files
+	var f wf.Files
 
 	d := json.NewDecoder(r.Body)
 	if err := d.Decode(&f); err != nil {
@@ -152,7 +152,7 @@ func (a *App) saveFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message, _ := json.Marshal(f)
-	go a.SendMessage("storage", message)
+	go a.MQ.SendMessage("storage", message)
 
 	respondWithJSON(w, http.StatusOK, f)
 }
@@ -220,7 +220,7 @@ func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/wfexec/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.SendMessage("upload", message)
+	go a.MQ.SendMessage("upload", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -231,7 +231,7 @@ func (a *App) convertMonitor(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/convert/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.SendMessage("convert", message)
+	go a.MQ.SendMessage("convert", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }

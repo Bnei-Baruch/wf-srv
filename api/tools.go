@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/Bnei-Baruch/wf-srv/workflow"
+	"github.com/Bnei-Baruch/wf-srv/wf"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -233,7 +233,7 @@ func (u *Upload) UploadProps(filepath string, ep string) error {
 }
 
 func IsExist(name string) (error, bool) {
-	files := make([]workflow.Files, 0)
+	files := make([]wf.Files, 0)
 
 	var bearer = "Bearer " + common.PASSWORD
 	req, err := http.NewRequest("GET", common.WfdbUrl+"?file_name="+name, nil)

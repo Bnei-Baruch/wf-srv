@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/Bnei-Baruch/wf-srv/workflow"
 	"github.com/coreos/go-oidc"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/gorilla/handlers"
@@ -16,7 +15,8 @@ import (
 type App struct {
 	Router        *mux.Router
 	tokenVerifier *oidc.IDTokenVerifier
-	Msg           *paho.Client
+	mqtt          *paho.Client
+	MQ            MQ
 }
 
 func (a *App) InitClient() {
@@ -61,7 +61,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.Use(a.LoggingMiddleware)
 	a.Router.HandleFunc("/convert", a.convertExec).Methods("GET")
 	a.Router.HandleFunc("/{ep}/upload", a.handleUpload).Methods("POST")
-	a.Router.HandleFunc("/workflow/{ep}", a.putJson).Methods("PUT")
+	a.Router.HandleFunc("/wf/{ep}", a.putJson).Methods("PUT")
 	a.Router.HandleFunc("/file/save", a.saveFile).Methods("PUT")
 	a.Router.HandleFunc("/{ep}/status", a.statusJson).Methods("GET")
 	a.Router.HandleFunc("/convert/monitor", a.convertMonitor).Methods("GET")
@@ -77,17 +77,9 @@ func (a *App) InitializeRoutes() {
 }
 
 func (a *App) initMQTT() {
-	if common.SERVER != "" {
-		a.Msg = paho.NewClient(paho.ClientConfig{
-			ClientID:      common.EP + "-exec_mqtt_client",
-			OnClientError: a.LostMQTT,
-		})
-
-		workflow.Msg = a.Msg
-
-		if err := a.ConMQTT(); err != nil {
-			log.Fatal().Str("source", "MQTT").Err(err).Msg("initialize mqtt listener")
-		}
+	a.MQ = NewMqtt(a.mqtt)
+	if err := a.MQ.Init(); err != nil {
+		log.Fatal().Str("source", "MQTT").Err(err).Msg("initialize mqtt")
 	}
 }
 

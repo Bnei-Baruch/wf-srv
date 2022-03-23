@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/Bnei-Baruch/wf-srv/workflow"
+	"github.com/Bnei-Baruch/wf-srv/wf"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -16,6 +16,11 @@ import (
 	"strings"
 	"time"
 )
+
+type Mqtt struct {
+	mqtt *paho.Client
+	WF   wf.WF
+}
 
 type MqttPayload struct {
 	Action  string      `json:"action,omitempty"`
@@ -28,10 +33,37 @@ type MqttPayload struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func (a *App) ConMQTT() error {
+type MQ interface {
+	SendMessage(string, []byte)
+	Init() error
+	SendRespond(string, *MqttPayload)
+}
+
+func NewMqtt(mqtt *paho.Client) MQ {
+	return &Mqtt{
+		mqtt: mqtt,
+	}
+}
+
+func (m *Mqtt) Init() error {
+	m.mqtt = paho.NewClient(paho.ClientConfig{
+		ClientID:      common.EP + "-exec_mqtt_client",
+		OnClientError: m.lostMQTT,
+	})
+
+	m.WF = wf.NewWorkFlow(m.mqtt)
+
+	if err := m.conMQTT(); err != nil {
+		log.Error().Str("source", "MQTT").Err(err).Msg("initialize mqtt connection")
+	}
+
+	return nil
+}
+
+func (m *Mqtt) conMQTT() error {
 	var err error
 
-	a.Msg.Conn = connect()
+	m.mqtt.Conn = connect()
 	var sessionExpiryInterval = uint32(math.MaxUint32)
 
 	cp := &paho.Connect{
@@ -47,13 +79,13 @@ func (a *App) ConMQTT() error {
 		},
 	}
 
-	a.Msg.SetErrorLogger(NewPahoLogAdapter(zerolog.DebugLevel))
+	m.mqtt.SetErrorLogger(NewPahoLogAdapter(zerolog.DebugLevel))
 	debugLog := NewPahoLogAdapter(zerolog.DebugLevel)
-	a.Msg.SetDebugLogger(debugLog)
-	a.Msg.PingHandler.SetDebug(debugLog)
-	a.Msg.Router.SetDebugLogger(debugLog)
+	m.mqtt.SetDebugLogger(debugLog)
+	m.mqtt.PingHandler.SetDebug(debugLog)
+	m.mqtt.Router.SetDebugLogger(debugLog)
 
-	ca, err := a.Msg.Connect(context.Background(), cp)
+	ca, err := m.mqtt.Connect(context.Background(), cp)
 	if err != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("client.Connect")
 	}
@@ -61,7 +93,7 @@ func (a *App) ConMQTT() error {
 		log.Error().Str("source", "MQTT").Err(err).Msgf("MQTT connect error: %d - %s", ca.ReasonCode, ca.Properties.ReasonString)
 	}
 
-	sa, err := a.Msg.Subscribe(context.Background(), &paho.Subscribe{
+	sa, err := m.mqtt.Subscribe(context.Background(), &paho.Subscribe{
 		Subscriptions: map[string]paho.SubscribeOptions{
 			common.WorkflowExec: {QoS: byte(1)},
 		},
@@ -73,7 +105,7 @@ func (a *App) ConMQTT() error {
 		log.Error().Str("source", "MQTT").Err(err).Msgf("MQTT subscribe error: %d ", sa.Reasons[0])
 	}
 
-	a.Msg.Router.RegisterHandler(common.WorkflowExec, a.execMessage)
+	m.mqtt.Router.RegisterHandler(common.WorkflowExec, m.execMessage)
 
 	return nil
 }
@@ -95,22 +127,25 @@ func connect() net.Conn {
 	return conn
 }
 
-func (a *App) LostMQTT(err error) {
+func (m *Mqtt) lostMQTT(err error) {
 	log.Error().Str("source", "MQTT").Err(err).Msg("Lost Connection")
 	time.Sleep(1 * time.Second)
-	if err := a.Msg.Disconnect(&paho.Disconnect{ReasonCode: 0}); err != nil {
+	if err := m.mqtt.Disconnect(&paho.Disconnect{ReasonCode: 0}); err != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("Reconnecting..")
 	}
 	time.Sleep(1 * time.Second)
-	a.initMQTT()
+	_ = m.conMQTT()
 }
 
-func (a *App) execMessage(m *paho.Publish) {
-	//log.Debug().Str("source", "MQTT").Msgf("Received message: %s from topic: %s\n", m.Payload(), m.Topic())
-	log.Debug().Str("source", "MQTT").Msgf("Received message: %s from topic: %s\n", string(m.Payload), m.Topic)
+func (m *Mqtt) execMessage(p *paho.Publish) {
+	//var User = m.Properties.User
+	//var CorrelationData = m.Properties.CorrelationData
+	//var ResponseTopic = m.Properties.ResponseTopic
+
+	log.Debug().Str("source", "MQTT").Msgf("Received message: %s from topic: %s\n", string(p.Payload), p.Topic)
 	id := "false"
-	s := strings.Split(m.Topic, "/")
-	p := string(m.Payload)
+	s := strings.Split(p.Topic, "/")
+	pl := string(p.Payload)
 
 	if s[0] == common.ExtPrefix && len(s) == 5 {
 		id = s[4]
@@ -121,12 +156,12 @@ func (a *App) execMessage(m *paho.Publish) {
 	log.Debug().Str("source", "MQTT").Msgf("Topic parser: %s\n", id)
 
 	if id != "false" {
-		cmd := exec.Command("/opt/wfexec/"+id+".sh", p, common.EP)
+		cmd := exec.Command("/opt/wfexec/"+id+".sh", pl, common.EP)
 		cmd.Dir = "/opt/wfexec/"
 		_, err := cmd.CombinedOutput()
 
 		if id == "sync" || id == "storage" || common.EP == "wf-srv" {
-			notifyMessage(m.Payload)
+			notifyMessage(p.Payload)
 		}
 
 		if err != nil {
@@ -140,7 +175,7 @@ func (a *App) execMessage(m *paho.Publish) {
 
 func notifyMessage(m []byte) {
 	log.Debug().Str("source", "MQTT").Msgf("prepare notify mail..\n")
-	var file workflow.Files
+	var file wf.Files
 
 	// Unquote
 	uq := strings.ReplaceAll(string(m), "\n", "")
@@ -169,7 +204,7 @@ func notifyMessage(m []byte) {
 	SendEmail(file.FileName, file.ProductID)
 }
 
-func (a *App) SendRespond(id string, m *MqttPayload) {
+func (m *Mqtt) SendRespond(id string, p *MqttPayload) {
 	var topic string
 
 	if id == "false" {
@@ -177,12 +212,12 @@ func (a *App) SendRespond(id string, m *MqttPayload) {
 	} else {
 		topic = common.ServiceDataTopic + common.EP + "/" + id
 	}
-	message, err := json.Marshal(m)
+	message, err := json.Marshal(p)
 	if err != nil {
 		log.Error().Str("source", "MQTT").Err(err).Msg("Message parsing")
 	}
 
-	pa, err := a.Msg.Publish(context.Background(), &paho.Publish{
+	pa, err := m.mqtt.Publish(context.Background(), &paho.Publish{
 		QoS:     byte(1),
 		Retain:  false,
 		Topic:   topic,
@@ -193,11 +228,7 @@ func (a *App) SendRespond(id string, m *MqttPayload) {
 	}
 }
 
-func (a *App) SendMessage(source string, message []byte) {
-	//message, err := json.Marshal(m)
-	//if err != nil {
-	//	log.Error().Str("source", "MQTT").Err(err).Msg("Message parsing")
-	//}
+func (m *Mqtt) SendMessage(source string, message []byte) {
 	var topic string
 
 	switch source {
@@ -206,10 +237,10 @@ func (a *App) SendMessage(source string, message []byte) {
 	case "convert":
 		topic = common.MonitorConvertTopic
 	case "storage":
-		topic = "exec/workflow/storage/sync"
+		topic = "exec/wf/storage/sync"
 	}
 
-	pa, err := a.Msg.Publish(context.Background(), &paho.Publish{
+	pa, err := m.mqtt.Publish(context.Background(), &paho.Publish{
 		QoS:     byte(1),
 		Retain:  false,
 		Topic:   topic,

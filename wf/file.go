@@ -1,4 +1,4 @@
-package workflow
+package wf
 
 import (
 	"github.com/Bnei-Baruch/wf-srv/common"
