@@ -50,6 +50,12 @@ type File struct {
 	Children []*File `json:"children"`
 }
 
+type Mail struct {
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
+	To      []string `json:"to"`
+}
+
 func JsonFilesTree(path string) interface{} {
 	rootOSFile, _ := os.Stat(path)
 	rootFile := toFile(rootOSFile, path)
@@ -300,5 +306,26 @@ func SendEmail(subject string, body string) {
 		} else {
 			log.Debug().Str("source", "MAIL").Msg("Mail sent.\n")
 		}
+	}
+}
+
+func (m *Mail) NotifyByMail() error {
+	log.Debug().Str("source", "MAIL").Msgf("Notify by mail..\n")
+
+	user := common.MAIL_USER
+	password := common.MAIL_PASS
+	smtpHost := common.MAIL_HOST
+	from := common.MAIL_FROM
+	smtpPort := "587"
+
+	msg := []byte("From: " + from + "\r\n" + "Subject: " + m.Subject + "\r\n" + "\r\n" + "WF Notification: " + m.Body + "\r\n")
+	auth := smtp.PlainAuth("", user, password, smtpHost)
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, m.To, msg)
+	if err != nil {
+		log.Error().Str("source", "MAIL").Err(err).Msg("Notify by mail error")
+		return err
+	} else {
+		log.Debug().Str("source", "MAIL").Msg("Notify by mail success.\n")
+		return nil
 	}
 }

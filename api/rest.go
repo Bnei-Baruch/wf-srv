@@ -214,6 +214,25 @@ func (a *App) sendMail(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, s)
 }
 
+func (a *App) notifyByMail(w http.ResponseWriter, r *http.Request) {
+	var m Mail
+
+	d := json.NewDecoder(r.Body)
+	if err := d.Decode(&m); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		return
+	}
+
+	defer r.Body.Close()
+
+	if err := m.NotifyByMail(); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
 func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	cmdArguments := []string{}
 	cmd := exec.Command("/opt/wfexec/get_upload.sh", cmdArguments...)
