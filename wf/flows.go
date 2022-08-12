@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
+	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -35,10 +36,10 @@ type WF interface {
 
 type WorkFlow struct {
 	json *MqttJson
-	mqtt *paho.Client
+	mqtt *autopaho.ConnectionManager
 }
 
-func NewWorkFlow(mqtt *paho.Client) WF {
+func NewWorkFlow(mqtt *autopaho.ConnectionManager) WF {
 	return &WorkFlow{
 		mqtt: mqtt,
 	}

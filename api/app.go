@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/coreos/go-oidc"
-	"github.com/eclipse/paho.golang/paho"
+	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -15,7 +15,7 @@ import (
 type App struct {
 	Router        *mux.Router
 	tokenVerifier *oidc.IDTokenVerifier
-	mqtt          *paho.Client
+	mqtt          *autopaho.ConnectionManager
 	MQ            MQ
 }
 
