@@ -47,4 +47,5 @@ const (
 	WorkflowDataTopic   = "workflow/server/data/"
 	MonitorUploadTopic  = "workflow/server/upload/monitor"
 	MonitorConvertTopic = "workflow/server/convert/monitor"
+	MonitorLocalTopic   = "workflow/server/local/upload"
 )

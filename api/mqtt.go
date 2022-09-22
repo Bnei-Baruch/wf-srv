@@ -199,6 +199,8 @@ func (m *Mqtt) SendMessage(source string, message []byte) {
 	switch source {
 	case "upload":
 		topic = common.MonitorUploadTopic
+	case "local":
+		topic = common.MonitorLocalTopic
 	case "convert":
 		topic = common.MonitorConvertTopic
 	case "storage":

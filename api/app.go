@@ -66,6 +66,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/{ep}/status", a.statusJson).Methods("GET")
 	a.Router.HandleFunc("/convert/monitor", a.convertMonitor).Methods("GET")
 	a.Router.HandleFunc("/upload/monitor", a.uploadMonitor).Methods("GET")
+	a.Router.HandleFunc("/local/upload", a.localUpload).Methods("GET")
 	a.Router.HandleFunc("/send/mail", a.sendMail).Methods("POST")
 	a.Router.HandleFunc("/wf/notify", a.notifyByMail).Methods("POST")
 	a.Router.HandleFunc("/tree", a.getFilesTree).Methods("GET")

@@ -244,6 +244,17 @@ func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
+func (a *App) localUpload(w http.ResponseWriter, r *http.Request) {
+	cmdArguments := []string{}
+	cmd := exec.Command("/opt/wfexec/get_local.sh", cmdArguments...)
+	cmd.Dir = "/opt/wfexec/"
+	message, _ := cmd.CombinedOutput()
+
+	go a.MQ.SendMessage("local", message)
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
 func (a *App) convertMonitor(w http.ResponseWriter, r *http.Request) {
 	cmdArguments := []string{}
 	cmd := exec.Command("/opt/convert/status.sh", cmdArguments...)
