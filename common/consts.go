@@ -12,6 +12,7 @@ var (
 	PORT      = os.Getenv("LISTEN_ADDRESS")
 	ACC_URL   = os.Getenv("ACC_URL")
 	SKIP_AUTH = os.Getenv("SKIP_AUTH") == "true"
+	DEBUG     = os.Getenv("DEBUG")
 
 	SdbUrl   = os.Getenv("SDB_URL")
 	WfApiUrl = os.Getenv("WFAPI_URL")
