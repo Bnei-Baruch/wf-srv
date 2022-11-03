@@ -87,6 +87,7 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 		if part, err = mr.NextPart(); err != nil {
 			if err != io.EOF {
 				respondWithError(w, http.StatusInternalServerError, err.Error())
+				os.Remove(tempfile.Name())
 			} else {
 				respondWithJSON(w, http.StatusOK, u)
 			}
@@ -113,6 +114,7 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 			if n, err = part.Read(chunk); err != nil {
 				if err != io.EOF {
 					respondWithError(w, http.StatusInternalServerError, err.Error())
+					os.Remove(tempfile.Name())
 					return
 				}
 				uploaded = true
@@ -120,6 +122,7 @@ func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 
 			if n, err = tempfile.Write(chunk[:n]); err != nil {
 				respondWithError(w, http.StatusInternalServerError, err.Error())
+				os.Remove(tempfile.Name())
 				return
 			}
 			filesize += n
