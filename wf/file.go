@@ -48,7 +48,7 @@ func (f *Files) SaveFile() error {
 
 	// Make directory
 	if _, err := os.Stat(SavePath); os.IsNotExist(err) {
-		err = os.Mkdir(SavePath, os.ModeDir|0755)
+		err = os.MkdirAll(SavePath, os.ModeDir|0755)
 		if err != nil {
 			log.Error().Str("source", "FILES").Err(err).Msg("SaveFile: failed to make directory")
 			return err
