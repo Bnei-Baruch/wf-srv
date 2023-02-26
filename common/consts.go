@@ -31,6 +31,7 @@ var (
 	MAIL_PASS = os.Getenv("MAIL_PASS")
 
 	CapPath    = os.Getenv("CAP_PATH")
+	CachePath  = os.Getenv("CACHE_PATH")
 	LogPath    = os.Getenv("LOG_PATH")
 	UploadPath = os.Getenv("UPLOAD_PATH")
 	FilesPath  = os.Getenv("FILES_PATH")

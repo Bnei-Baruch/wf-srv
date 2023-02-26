@@ -45,6 +45,26 @@ func getUploadPath(ep string) string {
 	}
 }
 
+func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	file := vars["file"]
+
+	if _, err := os.Stat(common.CachePath + file); os.IsNotExist(err) {
+		cmdArguments := []string{file}
+		cmd := exec.Command("/opt/wfexec/remux.sh", cmdArguments...)
+		cmd.Dir = "/opt/wfexec/"
+		_, err := cmd.CombinedOutput()
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	http.ServeFile(w, r, common.CachePath+file)
+}
+
 func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	endpoint := vars["ep"]
