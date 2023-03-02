@@ -94,7 +94,7 @@ func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal([]byte(body), &data)
 	f := data["filename"].(string)
 	n := strings.Split(f, "/")
-	f = f[4:]
+	n = n[4:]
 	s := strings.Join(n, "/")
 
 	http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
