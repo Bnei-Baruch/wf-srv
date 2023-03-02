@@ -18,6 +18,7 @@ var (
 	WfApiUrl = os.Getenv("WFAPI_URL")
 	MdbUrl   = os.Getenv("MDB_URL")
 	WfdbUrl  = os.Getenv("WFDB_URL")
+	CdnUrl   = os.Getenv("CDN_URL")
 
 	EP       = os.Getenv("MQTT_EP")
 	SERVER   = os.Getenv("MQTT_URL")

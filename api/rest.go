@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func getUploadPath(ep string) string {
@@ -63,6 +64,40 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.ServeFile(w, r, common.CachePath+file)
+}
+
+func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	file := vars["file"]
+
+	req, err := http.NewRequest("GET", common.CdnUrl+"/"+file, nil)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	//req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	var data map[string]interface{}
+	json.Unmarshal([]byte(body), &data)
+	f := data["filename"].(string)
+	n := strings.Split(f, "/")
+	f = f[4:]
+	s := strings.Join(n, "/")
+
+	http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
 }
 
 func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {
