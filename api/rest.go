@@ -79,9 +79,9 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal([]byte(body), &data)
 	f := data["file_name"].(string)
 	fileName := ""
-	n := strings.Split(f, "-")
+	n := strings.Split(f, "_")
 	n = n[1:]
-	s := strings.Join(n, "-")
+	s := strings.Join(n, "_")
 
 	if video == "" {
 		fileName = lang + "_" + s + ".mp4"
