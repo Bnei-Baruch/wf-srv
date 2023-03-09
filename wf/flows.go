@@ -226,8 +226,8 @@ func (w *WorkFlow) StopFlow(rp *MqttJson) {
 
 	time := stat.Sys().(*syscall.Stat_t)
 	//FIXME: WTF?
-	//ctime := time.Ctimespec.Nsec //OSX
-	ctime := time.Ctim.Nsec //Linux
+	ctime := time.Ctimespec.Nsec //OSX
+	//ctime := time.Ctim.Nsec //Linux
 	log.Debug().Str("source", "CAP").Msgf("Creation time file: ", ctime)
 
 	h := sha1.New()

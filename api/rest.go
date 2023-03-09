@@ -50,55 +50,58 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	file := vars["file"]
-	l := r.FormValue("audio")
-	v := r.FormValue("video")
+	lang := r.FormValue("audio")
+	video := r.FormValue("video")
 
 	req, err := http.NewRequest("GET", common.CdnUrl+"/"+file, nil)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	//req.Header.Set("Authorization", bearer)
 	req.Header.Add("Content-Type", "application/json")
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	var data map[string]interface{}
 	json.Unmarshal([]byte(body), &data)
 	f := data["file_name"].(string)
-	var fileName string
+	fileName := ""
 	n := strings.Split(f, "-")
-	n = n[4:]
+	n = n[1:]
 	s := strings.Join(n, "-")
 
-	if v != "" {
-		fileName = l + "_" + s + "_" + v + ".mp4"
+	if video == "" {
+		fileName = lang + "_" + s + ".mp4"
 	} else {
-		fileName = l + "_" + s + ".mp4"
+		fileName = lang + "_" + s + "_" + video + ".mp4"
 	}
 
 	if _, err := os.Stat(common.CachePath + fileName); os.IsNotExist(err) {
-		cmd := exec.Command("/opt/wfexec/remux.sh", f, l, v)
+		cmdArguments := []string{f, lang, video}
+		cmd := exec.Command("/opt/wfexec/remux.sh", cmdArguments...)
 		cmd.Dir = "/opt/wfexec/"
 		_, err := cmd.CombinedOutput()
 
 		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 	}
 
-	//http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
-	http.ServeFile(w, r, common.CachePath+fileName)
+	http.Redirect(w, r, "https://files.kab.sh/muxed/"+fileName, 302)
 }
 
 func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
