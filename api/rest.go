@@ -50,10 +50,34 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	file := vars["file"]
+	l := r.FormValue("audio")
+	v := r.FormValue("video")
+
+	req, err := http.NewRequest("GET", common.CdnUrl+"/"+file, nil)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	//req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	var data map[string]interface{}
+	json.Unmarshal([]byte(body), &data)
+	f := data["filename"].(string)
 
 	if _, err := os.Stat(common.CachePath + file); os.IsNotExist(err) {
-		cmdArguments := []string{file}
-		cmd := exec.Command("/opt/wfexec/remux.sh", cmdArguments...)
+		cmd := exec.Command("/opt/wfexec/remux.sh", f, l, v)
 		cmd.Dir = "/opt/wfexec/"
 		_, err := cmd.CombinedOutput()
 
@@ -63,13 +87,26 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.ServeFile(w, r, common.CachePath+file)
+	var fileName string
+	n := strings.Split(f, "-")
+	n = n[4:]
+	s := strings.Join(n, "-")
+
+	if v != "" {
+		fileName = l + "_" + s + "_" + v + ".mp4"
+	} else {
+		fileName = l + "_" + s + ".mp4"
+	}
+
+	//http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
+	http.ServeFile(w, r, common.CachePath+fileName)
 }
 
 func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	file := vars["file"]
+	nv := r.FormValue("no_video")
 
 	req, err := http.NewRequest("GET", common.CdnUrl+"/"+file, nil)
 	if err != nil {
@@ -97,7 +134,11 @@ func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
 	n = n[4:]
 	s := strings.Join(n, "/")
 
-	http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
+	if nv == "true" {
+		http.Redirect(w, r, "https://files.kab.sh/hls/tracks/a0/"+s+"/master.m3u8", 302)
+	} else {
+		http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
+	}
 }
 
 func (a *App) handleUpload(w http.ResponseWriter, r *http.Request) {

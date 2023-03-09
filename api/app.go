@@ -59,7 +59,7 @@ func (a *App) Run(port string) {
 
 func (a *App) InitializeRoutes() {
 	a.Router.Use(a.LoggingMiddleware)
-	a.Router.HandleFunc("/get/{file}", a.getFile).Methods("GET")
+	a.Router.HandleFunc("/get/{file}.mp4", a.getFile).Methods("GET")
 	a.Router.HandleFunc("/cdn/{file}.m3u8", a.getFileLocation).Methods("GET")
 	a.Router.HandleFunc("/convert", a.convertExec).Methods("GET")
 	a.Router.HandleFunc("/{ep}/upload", a.handleUpload).Methods("POST")
