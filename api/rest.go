@@ -74,19 +74,7 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 
 	var data map[string]interface{}
 	json.Unmarshal([]byte(body), &data)
-	f := data["filename"].(string)
-
-	if _, err := os.Stat(common.CachePath + file); os.IsNotExist(err) {
-		cmd := exec.Command("/opt/wfexec/remux.sh", f, l, v)
-		cmd.Dir = "/opt/wfexec/"
-		_, err := cmd.CombinedOutput()
-
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-	}
-
+	f := data["file_name"].(string)
 	var fileName string
 	n := strings.Split(f, "-")
 	n = n[4:]
@@ -96,6 +84,17 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 		fileName = l + "_" + s + "_" + v + ".mp4"
 	} else {
 		fileName = l + "_" + s + ".mp4"
+	}
+
+	if _, err := os.Stat(common.CachePath + fileName); os.IsNotExist(err) {
+		cmd := exec.Command("/opt/wfexec/remux.sh", f, l, v)
+		cmd.Dir = "/opt/wfexec/"
+		_, err := cmd.CombinedOutput()
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	//http.Redirect(w, r, "https://files.kab.sh/hls/"+s+",.urlset/master.m3u8", 302)
