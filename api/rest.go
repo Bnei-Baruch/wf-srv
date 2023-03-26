@@ -84,7 +84,7 @@ func (a *App) getFile(w http.ResponseWriter, r *http.Request) {
 	s := strings.Join(n, "_")
 
 	if video == "" {
-		fileName = lang + "_" + s + ".m4s"
+		fileName = lang + "_" + s + ".m4a"
 	} else {
 		fileName = lang + "_" + s + "_" + video + ".mp4"
 	}
