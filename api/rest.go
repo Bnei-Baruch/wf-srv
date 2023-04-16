@@ -28,7 +28,7 @@ func getUploadPath(ep string) string {
 	case "aklada":
 		return "/backup/tmp/akladot/"
 	case "gibuy":
-		return "/tmp/"
+		return "/backup/tmp/gibuy/"
 	case "carbon":
 		return "/backup/tmp/carbon/"
 	case "dgima":
