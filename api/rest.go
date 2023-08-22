@@ -253,7 +253,7 @@ func (a *App) saveFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message, _ := json.Marshal(f)
-	go a.MQ.SendMessage("storage", message)
+	go a.SendMessage("storage", message)
 
 	respondWithJSON(w, http.StatusOK, f)
 }
@@ -340,7 +340,7 @@ func (a *App) uploadMonitor(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/wfexec/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.MQ.SendMessage("upload", message)
+	go a.SendMessage("upload", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -351,7 +351,7 @@ func (a *App) localUpload(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/wfexec/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.MQ.SendMessage("local", message)
+	go a.SendMessage("local", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -362,7 +362,7 @@ func (a *App) convertMonitor(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = "/opt/convert/"
 	message, _ := cmd.CombinedOutput()
 
-	go a.MQ.SendMessage("convert", message)
+	go a.SendMessage("convert", message)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }

@@ -3,20 +3,21 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
 	"github.com/coreos/go-oidc"
-	"github.com/eclipse/paho.golang/autopaho"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"time"
 )
 
 type App struct {
 	Router        *mux.Router
 	tokenVerifier *oidc.IDTokenVerifier
-	mqtt          *autopaho.ConnectionManager
-	MQ            MQ
+	Msg           mqtt.Client
 }
 
 func (a *App) InitClient() {
@@ -81,9 +82,21 @@ func (a *App) InitializeRoutes() {
 }
 
 func (a *App) initMQTT() {
-	a.MQ = NewMqtt(a.mqtt)
-	if err := a.MQ.Init(); err != nil {
-		log.Fatal().Str("source", "MQTT").Err(err).Msg("initialize mqtt")
+
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(fmt.Sprintf("ssl://%s", common.SERVER))
+	opts.SetClientID(common.EP + "-exec_mqtt_client")
+	opts.SetUsername(common.USERNAME)
+	opts.SetPassword(common.PASSWORD)
+	opts.SetKeepAlive(10 * time.Second)
+	opts.SetAutoReconnect(true)
+	opts.SetOnConnectHandler(a.SubMQTT)
+	opts.SetConnectionLostHandler(a.LostMQTT)
+	opts.SetBinaryWill(common.WorkflowStatusTopic, []byte("Offline"), byte(2), true)
+	a.Msg = mqtt.NewClient(opts)
+	if token := a.Msg.Connect(); token.Wait() && token.Error() != nil {
+		err := token.Error()
+		log.Fatal().Str("source", "MQTT").Err(err).Msg("initialize mqtt listener")
 	}
 }
 

@@ -38,10 +38,11 @@ var (
 	FilesPath  = os.Getenv("FILES_PATH")
 	TreePath   = os.Getenv("TREE_PATH")
 
-	ExecTopic     = "workflow/exec/#"
-	WorkflowTopic = "workflow/server/#"
-	WorkflowExec  = "exec/workflow/#"
-	ExtPrefix     = os.Getenv("MQTT_FWD_PREFIX")
+	ExecTopic           = "workflow/exec/#"
+	WorkflowTopic       = "workflow/server/#"
+	WorkflowStatusTopic = "workflow/status/" + EP + "/"
+	WorkflowExec        = "exec/workflow/#"
+	ExtPrefix           = os.Getenv("MQTT_FWD_PREFIX")
 )
 
 const (

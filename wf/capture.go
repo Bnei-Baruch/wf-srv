@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Bnei-Baruch/wf-srv/common"
-	"github.com/eclipse/paho.golang/paho"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -112,28 +113,42 @@ type CaptureFlow struct {
 	Url       string `json:"url"`
 }
 
-var Data []byte
-
 func GetState() *CaptureState {
 	var cs *CaptureState
-	err := json.Unmarshal(Data, &cs)
+	s, err := os.ReadFile("state.json")
 	if err != nil {
-		log.Error().Str("source", "CAP").Err(err).Msg("get state")
+		log.Error().Str("source", "CAP").Err(err).Msg("read file")
+	}
+	err = json.Unmarshal(s, &cs)
+	if err != nil {
+		log.Error().Str("source", "CAP").Err(err).Msg("Unmarshal state")
 	}
 	u, _ := json.Marshal(cs)
 	log.Debug().Str("source", "CAP").RawJSON("json", u).Msg("get state")
 	return cs
 }
 
-func (w *WorkFlow) SetState(m *paho.Publish) {
+func SetState(c mqtt.Client, m mqtt.Message) {
 	cs := &CaptureState{}
-	err := json.Unmarshal(m.Payload, &cs)
+	err := json.Unmarshal(m.Payload(), &cs)
 	if err != nil {
 		log.Error().Str("source", "CAP").Err(err).Msg("get state")
 	}
 	u, _ := json.Marshal(cs)
 	log.Debug().Str("source", "CAP").RawJSON("json", u).Msg("set state")
-	Data = m.Payload
+	err = os.WriteFile("state.json", u, 0644)
+	if err != nil {
+		log.Error().Str("source", "CAP").Err(err).Msg("save state")
+	}
+
+	//pid := pgutil.GetPID()
+	//if pid == 0 && cs.IsRec {
+	//	cs.IsRec = false
+	//	w.SendState(common.StateTopic, cs)
+	//	return
+	//}
+	//
+	//w.SendProgress(cs.IsRec)
 }
 
 func (m *MdbPayload) PostMDB(ep string) error {
