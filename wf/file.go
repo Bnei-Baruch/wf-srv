@@ -69,5 +69,11 @@ func (f *Files) SaveFile() error {
 		return err
 	}
 
+	err = os.Chmod(FilePath, 0644)
+	if err != nil {
+		log.Error().Str("source", "FILES").Err(err).Msg("SaveFile: failed to set permission")
+		return err
+	}
+
 	return nil
 }
