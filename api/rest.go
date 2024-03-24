@@ -137,9 +137,9 @@ func (a *App) getFileLocation(w http.ResponseWriter, r *http.Request) {
 	s := strings.Join(n, "/")
 
 	if nv == "true" {
-		http.Redirect(w, r, "https://files.kab.sh/hls/tracks/a0/"+s+"/master.m3u8?uid="+file, 302)
+		http.Redirect(w, r, "https://files.kab.sh/hls/tracks/a0/"+file+"/"+s+"/master.m3u8", 302)
 	} else {
-		http.Redirect(w, r, "https://files.kab.sh/hls/"+s+"/master.m3u8?uid="+file, 302)
+		http.Redirect(w, r, "https://files.kab.sh/hls/"+file+"/"+s+"/master.m3u8", 302)
 	}
 }
 
